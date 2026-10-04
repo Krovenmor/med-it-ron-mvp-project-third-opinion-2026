@@ -166,6 +166,7 @@ func TestReview_InvalidReviewIsRejected(t *testing.T) {
 		{"rejected as other without comment", reviewRequest{Mark: "rejected", RejectReason: "other"}},
 		{"reason on accepted recommendation", reviewRequest{Mark: "critical", RejectReason: "contraindicated"}},
 		{"empty patient text", reviewRequest{Mark: "critical", PatientText: &empty}},
+		{"nothing to update", reviewRequest{}},
 	}
 	for _, tt := range reviews {
 		status, _ := api.reviewRecommendation(t, doctor, c.ID, recID, tt.req)
@@ -294,4 +295,55 @@ func queueIDs(q reviewQueueView) []string {
 		ids = append(ids, c.CaseID)
 	}
 	return ids
+}
+
+func TestReview_QueueShowsPatientIdentifierAndWhenCaseWasOpened(t *testing.T) {
+	t.Parallel()
+	r := newReport()
+	c := ingestInReview(t, r, validAssessment())
+
+	item := queueItem(t, c.ID)
+	assert.Equal(t, r.Patient.ID, item.Patient.ID)
+	assert.True(t, item.OpenedAt.IsZero())
+
+	require.Equal(t, http.StatusNoContent, api.openCase(t, doctor, c.ID))
+	assert.False(t, queueItem(t, c.ID).OpenedAt.IsZero())
+}
+
+func queueItem(t *testing.T, caseID string) queueCaseView {
+	t.Helper()
+	queue := api.reviewQueue(t)
+	i := slices.IndexFunc(queue.Cases, func(c queueCaseView) bool { return c.CaseID == caseID })
+	require.GreaterOrEqual(t, i, 0, "case %s is not in the queue", caseID)
+	return queue.Cases[i]
+}
+
+func TestReview_PatientTextCanBeEditedBeforeAndAfterMarking(t *testing.T) {
+	t.Parallel()
+	c := newCaseInReview(t, "priority")
+	rec := c.Recommendations[0]
+
+	draft := "Рекомендуем записаться к пульмонологу в ближайшие две недели"
+	status, edited := api.reviewRecommendation(t, doctor, c.ID, rec.ID, reviewRequest{PatientText: &draft})
+	require.Equal(t, http.StatusOK, status)
+	assert.Equal(t, draft, edited.PatientText)
+	assert.Nil(t, edited.Review)
+
+	status, marked := api.reviewRecommendation(t, doctor, c.ID, rec.ID, reviewRequest{Mark: "minor"})
+	require.Equal(t, http.StatusOK, status)
+	assert.Equal(t, draft, marked.PatientText)
+	require.NotNil(t, marked.Review)
+	assert.Equal(t, "minor", marked.Review.Mark)
+
+	final := "Запишитесь к пульмонологу в течение месяца"
+	status, reworded := api.reviewRecommendation(t, doctor, c.ID, rec.ID, reviewRequest{PatientText: &final})
+	require.Equal(t, http.StatusOK, status)
+	assert.Equal(t, final, reworded.PatientText)
+	require.NotNil(t, reworded.Review)
+	assert.Equal(t, "minor", reworded.Review.Mark)
+
+	edits := eventsOfType(t, c.ID, "recommendation_text_edited")
+	require.Len(t, edits, 2)
+	assert.Equal(t, doctor, edits[0].Actor)
+	assert.Equal(t, map[string]string{"recommendation_id": rec.ID}, edits[0].Payload)
 }

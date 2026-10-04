@@ -34,18 +34,18 @@ func (c *Client) PatientHistory(ctx context.Context, p domain.Patient) (domain.P
 
 	resp, err := c.http.Do(req)
 	if err != nil {
-		return domain.PatientHistory{}, fmt.Errorf("call mis: %w", err)
+		return domain.PatientHistory{}, fmt.Errorf("%w: call mis: %v", domain.ErrUpstream, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		snippet, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
-		return domain.PatientHistory{}, fmt.Errorf("mis responded %d: %s", resp.StatusCode, snippet)
+		return domain.PatientHistory{}, fmt.Errorf("%w: mis responded %d: %s", domain.ErrUpstream, resp.StatusCode, snippet)
 	}
 
 	var out historyResponse
 	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-		return domain.PatientHistory{}, fmt.Errorf("decode response: %w", err)
+		return domain.PatientHistory{}, fmt.Errorf("%w: decode mis response: %v", domain.ErrUpstream, err)
 	}
 	return out.toDomain(), nil
 }

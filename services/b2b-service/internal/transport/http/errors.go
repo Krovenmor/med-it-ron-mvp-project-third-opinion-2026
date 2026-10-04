@@ -17,6 +17,9 @@ func (h *Handler) writeError(w http.ResponseWriter, r *http.Request, err error) 
 		h.writeJSON(w, http.StatusNotFound, errorResponse{Error: "not found"})
 	case errors.Is(err, domain.ErrStudyConflict), errors.Is(err, domain.ErrInvalidState), errors.Is(err, domain.ErrConflict):
 		h.writeJSON(w, http.StatusConflict, errorResponse{Error: err.Error()})
+	case errors.Is(err, domain.ErrUpstream):
+		h.log.Error("upstream failed", zap.String("method", r.Method), zap.String("path", r.URL.Path), zap.Error(err))
+		h.writeJSON(w, http.StatusBadGateway, errorResponse{Error: "upstream service unavailable"})
 	default:
 		h.log.Error("request failed", zap.String("method", r.Method), zap.String("path", r.URL.Path), zap.Error(err))
 		h.writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal error"})

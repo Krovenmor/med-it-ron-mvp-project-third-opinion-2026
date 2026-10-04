@@ -7,11 +7,13 @@ func App() fx.Option {
 		fx.WithLogger(newFxLogger),
 		coreModule,
 		postgresModule,
+		misModule,
 		intakeModule,
 		casesModule,
 		reviewModule,
 		planModule,
 		bookingModule,
+		demoModule,
 		httpModule,
 		workerModule,
 	)

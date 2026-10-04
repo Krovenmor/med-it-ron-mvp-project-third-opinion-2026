@@ -72,6 +72,7 @@ type caseView struct {
 }
 
 type patientView struct {
+	ID        string `json:"id"`
 	FullName  string `json:"full_name"`
 	BirthDate string `json:"birth_date"`
 	Sex       string `json:"sex"`
@@ -104,6 +105,7 @@ type queueCaseView struct {
 	Patient                 patientView `json:"patient"`
 	RecommendationsTotal    int         `json:"recommendations_total"`
 	RecommendationsReviewed int         `json:"recommendations_reviewed"`
+	OpenedAt                time.Time   `json:"opened_at"`
 }
 
 type reviewRequest struct {

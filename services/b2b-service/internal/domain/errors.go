@@ -9,4 +9,5 @@ var (
 	ErrInvalidState  = errors.New("invalid state")
 	ErrConflict      = errors.New("conflict")
 	ErrLeaseLost     = errors.New("job lease lost")
+	ErrUpstream      = errors.New("upstream service failed")
 )

@@ -2,6 +2,7 @@ package domain
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -117,17 +118,25 @@ func (r Recommendation) Reviewed() bool {
 	return r.Review.Mark != ""
 }
 
-func (r *Recommendation) ApplyReview(review Review, patientText *string) error {
-	if err := review.Validate(); err != nil {
-		return err
+func (r *Recommendation) Edit(review *Review, patientText *string) error {
+	if review == nil && patientText == nil {
+		return invalid("mark or patient_text is required")
+	}
+	if review != nil {
+		if err := review.Validate(); err != nil {
+			return err
+		}
+	}
+	if patientText != nil && strings.TrimSpace(*patientText) == "" {
+		return invalid("patient_text must not be empty")
+	}
+
+	if review != nil {
+		r.Review = *review
 	}
 	if patientText != nil {
-		if *patientText == "" {
-			return invalid("patient_text must not be empty")
-		}
 		r.PatientText = *patientText
 	}
-	r.Review = review
 	return nil
 }
 

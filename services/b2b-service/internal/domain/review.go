@@ -15,4 +15,5 @@ type ReviewQueueItem struct {
 	Patient                 Patient
 	RecommendationsTotal    int
 	RecommendationsReviewed int
+	OpenedAt                time.Time
 }

@@ -19,6 +19,7 @@ type Intake interface {
 
 type Cases interface {
 	Get(ctx context.Context, id uuid.UUID) (cases.Details, error)
+	History(ctx context.Context, id uuid.UUID) (domain.PatientHistory, error)
 }
 
 type Review interface {
@@ -38,6 +39,11 @@ type Bookings interface {
 	Book(ctx context.Context, cmd booking.Book) (booking.Result, error)
 }
 
-type DemoClock interface {
+type Demo interface {
+	Reset(ctx context.Context) error
+}
+
+type Clock interface {
+	Now() time.Time
 	Advance(d time.Duration) time.Time
 }

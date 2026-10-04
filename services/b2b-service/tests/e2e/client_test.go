@@ -125,6 +125,22 @@ func (c *apiClient) registerBooking(t *testing.T, caseID string, req bookingRequ
 	return status, decode[bookingView](t, body)
 }
 
+func (c *apiClient) caseHistory(t *testing.T, caseID string) (int, history) {
+	t.Helper()
+	status, body := c.do(t, http.MethodGet, "/api/v1/cases/"+caseID+"/history", nil)
+	if status != http.StatusOK {
+		return status, history{}
+	}
+	return status, decode[history](t, body)
+}
+
+func (c *apiClient) clock(t *testing.T) time.Time {
+	t.Helper()
+	status, body := c.do(t, http.MethodGet, "/api/v1/clock", nil)
+	require.Equal(t, http.StatusOK, status)
+	return decode[clockView](t, body).Now
+}
+
 func poll(cond func() bool) bool {
 	deadline := time.Now().Add(settleTimeout)
 	for !cond() {

@@ -84,10 +84,17 @@ func (f *fakeAI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 type fakeMIS struct {
 	mu        sync.Mutex
 	histories map[string]history
+	failures  map[string]int
 }
 
 func newFakeMIS() *fakeMIS {
-	return &fakeMIS{histories: map[string]history{}}
+	return &fakeMIS{histories: map[string]history{}, failures: map[string]int{}}
+}
+
+func (f *fakeMIS) failHistory(patientID string, status int) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.failures[patientID] = status
 }
 
 func (f *fakeMIS) setHistory(patientID string, h history) {
@@ -101,7 +108,12 @@ func (f *fakeMIS) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	mux.HandleFunc("GET /api/v1/patients/{id}/history", func(w http.ResponseWriter, r *http.Request) {
 		f.mu.Lock()
 		h, ok := f.histories[r.PathValue("id")]
+		status, failing := f.failures[r.PathValue("id")]
 		f.mu.Unlock()
+		if failing {
+			w.WriteHeader(status)
+			return
+		}
 		if !ok {
 			h = history{Visits: []visit{}, Appointments: []appointment{}}
 		}

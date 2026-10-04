@@ -16,6 +16,7 @@ type Queries struct {
 	CaseEvents      CaseEvents
 	Jobs            Jobs
 	Bookings        Bookings
+	Demo            Demo
 }
 
 type Patients struct {
@@ -39,6 +40,7 @@ type Recommendations struct {
 	Append             string
 	Get                string
 	UpdateReview       string
+	UpdatePatientText  string
 	ListByCase         string
 	ListActiveServices string
 }
@@ -46,6 +48,10 @@ type Recommendations struct {
 type Bookings struct {
 	InsertIfAbsent   string
 	GetByAppointment string
+}
+
+type Demo struct {
+	Reset string
 }
 
 type CaseEvents struct {
@@ -91,12 +97,16 @@ func Load() (Queries, error) {
 			Append:             read("recommendations/append.sql"),
 			Get:                read("recommendations/get.sql"),
 			UpdateReview:       read("recommendations/update_review.sql"),
+			UpdatePatientText:  read("recommendations/update_patient_text.sql"),
 			ListByCase:         read("recommendations/list_by_case.sql"),
 			ListActiveServices: read("recommendations/list_active_services.sql"),
 		},
 		Bookings: Bookings{
 			InsertIfAbsent:   read("bookings/insert_if_absent.sql"),
 			GetByAppointment: read("bookings/get_by_appointment.sql"),
+		},
+		Demo: Demo{
+			Reset: read("demo/reset.sql"),
 		},
 		CaseEvents: CaseEvents{
 			Insert: read("case_events/insert.sql"),

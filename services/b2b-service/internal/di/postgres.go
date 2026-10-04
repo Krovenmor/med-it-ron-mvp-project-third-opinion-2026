@@ -27,6 +27,7 @@ var postgresModule = fx.Module("postgres",
 		postgres.NewEvents,
 		postgres.NewBookings,
 		postgres.NewJobs,
+		postgres.NewDemo,
 	),
 )
 

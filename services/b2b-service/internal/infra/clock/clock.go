@@ -17,6 +17,10 @@ func (c *Clock) Now() time.Time {
 	return time.Now().Add(time.Duration(c.offset.Load())).UTC()
 }
 
+func (c *Clock) Reset() {
+	c.offset.Store(0)
+}
+
 func (c *Clock) Advance(d time.Duration) time.Time {
 	c.offset.Add(int64(d))
 	return c.Now()

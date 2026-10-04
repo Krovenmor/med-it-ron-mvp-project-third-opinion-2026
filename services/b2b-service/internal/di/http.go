@@ -16,7 +16,7 @@ import (
 
 var httpModule = fx.Module("http",
 	fx.Provide(
-		func(c *clock.Clock) httptransport.DemoClock { return c },
+		func(c *clock.Clock) httptransport.Clock { return c },
 		httptransport.NewHandler,
 	),
 	fx.Invoke(runHTTPServer),

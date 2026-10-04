@@ -37,12 +37,16 @@ func (s *Service) Open(ctx context.Context, caseID uuid.UUID, actor string) erro
 }
 
 func (s *Service) ReviewRecommendation(ctx context.Context, cmd ReviewRecommendation) (domain.Recommendation, error) {
-	review := domain.Review{
-		Mark:          cmd.Mark,
-		RejectReason:  cmd.RejectReason,
-		RejectComment: cmd.RejectComment,
-		ReviewedBy:    cmd.Actor,
-		ReviewedAt:    s.clock.Now(),
+	now := s.clock.Now()
+	var review *domain.Review
+	if cmd.Mark != "" {
+		review = &domain.Review{
+			Mark:          cmd.Mark,
+			RejectReason:  cmd.RejectReason,
+			RejectComment: cmd.RejectComment,
+			ReviewedBy:    cmd.Actor,
+			ReviewedAt:    now,
+		}
 	}
 
 	var rec domain.Recommendation
@@ -55,8 +59,14 @@ func (s *Service) ReviewRecommendation(ctx context.Context, cmd ReviewRecommenda
 		if err != nil {
 			return err
 		}
-		if err := rec.ApplyReview(review, cmd.PatientText); err != nil {
+		if err := rec.Edit(review, cmd.PatientText); err != nil {
 			return err
+		}
+		if review == nil {
+			if err := s.recommendations.UpdatePatientText(ctx, rec); err != nil {
+				return err
+			}
+			return s.events.Append(ctx, domain.RecommendationTextEdited(rec, cmd.Actor, now))
 		}
 		if err := s.recommendations.UpdateReview(ctx, rec); err != nil {
 			return err

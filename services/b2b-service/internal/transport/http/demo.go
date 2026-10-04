@@ -17,3 +17,11 @@ func (h *Handler) advanceClock(w http.ResponseWriter, r *http.Request) {
 	}
 	h.writeJSON(w, http.StatusOK, clockResponse{Now: h.clock.Advance(d)})
 }
+
+func (h *Handler) resetDemo(w http.ResponseWriter, r *http.Request) {
+	if err := h.demo.Reset(r.Context()); err != nil {
+		h.writeError(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}

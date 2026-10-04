@@ -18,6 +18,7 @@ type Queries struct {
 	GetPatientPhone         string
 	GetJobByCase            string
 	CreateMockModeDatabase  string
+	CreateDemoResetDatabase string
 	ListEventsByCase        string
 }
 
@@ -39,6 +40,7 @@ func Load() (Queries, error) {
 		GetPatientPhone:         read("get_patient_phone.sql"),
 		GetJobByCase:            read("get_job_by_case.sql"),
 		CreateMockModeDatabase:  read("create_mock_mode_database.sql"),
+		CreateDemoResetDatabase: read("create_demo_reset_database.sql"),
 		ListEventsByCase:        read("list_events_by_case.sql"),
 	}
 	if err := errors.Join(errs...); err != nil {

@@ -16,6 +16,10 @@ type Patients interface {
 	Get(ctx context.Context, id uuid.UUID) (domain.Patient, error)
 }
 
+type MIS interface {
+	PatientHistory(ctx context.Context, p domain.Patient) (domain.PatientHistory, error)
+}
+
 type Recommendations interface {
 	ListByCase(ctx context.Context, caseID uuid.UUID) ([]domain.Recommendation, error)
 }

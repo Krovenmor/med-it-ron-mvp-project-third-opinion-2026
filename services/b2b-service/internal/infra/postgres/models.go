@@ -64,16 +64,18 @@ type serviceRow struct {
 }
 
 type reviewQueueRow struct {
-	CaseID                  uuid.UUID `db:"case_id"`
-	Urgency                 *string   `db:"urgency"`
-	Modality                string    `db:"modality"`
-	PerformedAt             time.Time `db:"performed_at"`
-	ReceivedAt              time.Time `db:"received_at"`
-	PatientFullName         string    `db:"patient_full_name"`
-	PatientBirthDate        time.Time `db:"patient_birth_date"`
-	PatientSex              string    `db:"patient_sex"`
-	RecommendationsTotal    int       `db:"recommendations_total"`
-	RecommendationsReviewed int       `db:"recommendations_reviewed"`
+	CaseID                  uuid.UUID  `db:"case_id"`
+	Urgency                 *string    `db:"urgency"`
+	Modality                string     `db:"modality"`
+	PerformedAt             time.Time  `db:"performed_at"`
+	ReceivedAt              time.Time  `db:"received_at"`
+	PatientExternalID       string     `db:"patient_external_id"`
+	PatientFullName         string     `db:"patient_full_name"`
+	PatientBirthDate        time.Time  `db:"patient_birth_date"`
+	PatientSex              string     `db:"patient_sex"`
+	RecommendationsTotal    int        `db:"recommendations_total"`
+	RecommendationsReviewed int        `db:"recommendations_reviewed"`
+	OpenedAt                *time.Time `db:"opened_at"`
 }
 
 type bookingRow struct {
@@ -161,12 +163,14 @@ func (r reviewQueueRow) toDomain() domain.ReviewQueueItem {
 		PerformedAt: r.PerformedAt,
 		ReceivedAt:  r.ReceivedAt,
 		Patient: domain.Patient{
-			FullName:  r.PatientFullName,
-			BirthDate: r.PatientBirthDate,
-			Sex:       domain.Sex(r.PatientSex),
+			ExternalID: r.PatientExternalID,
+			FullName:   r.PatientFullName,
+			BirthDate:  r.PatientBirthDate,
+			Sex:        domain.Sex(r.PatientSex),
 		},
 		RecommendationsTotal:    r.RecommendationsTotal,
 		RecommendationsReviewed: r.RecommendationsReviewed,
+		OpenedAt:                valueOf(r.OpenedAt),
 	}
 }
 

@@ -71,6 +71,17 @@ func (r *Recommendations) UpdateReview(ctx context.Context, rec domain.Recommend
 	return nil
 }
 
+func (r *Recommendations) UpdatePatientText(ctx context.Context, rec domain.Recommendation) error {
+	tag, err := r.db(ctx).Exec(ctx, r.q.UpdatePatientText, pgx.StrictNamedArgs{"id": rec.ID, "patient_text": rec.PatientText})
+	if err != nil {
+		return fmt.Errorf("update patient text: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("recommendation %s: %w", rec.ID, domain.ErrNotFound)
+	}
+	return nil
+}
+
 func (r *Recommendations) ListByCase(ctx context.Context, caseID uuid.UUID) ([]domain.Recommendation, error) {
 	rows, err := r.db(ctx).Query(ctx, r.q.ListByCase, pgx.StrictNamedArgs{"case_id": caseID})
 	if err != nil {

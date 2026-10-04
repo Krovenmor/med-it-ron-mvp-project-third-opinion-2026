@@ -10,12 +10,13 @@ import (
 type CaseEventType string
 
 const (
-	CaseEventStatusChanged          CaseEventType = "status_changed"
-	CaseEventOpened                 CaseEventType = "case_opened"
-	CaseEventRecommendationReviewed CaseEventType = "recommendation_reviewed"
-	CaseEventRecommendationAdded    CaseEventType = "recommendation_added"
-	CaseEventUrgencyChanged         CaseEventType = "urgency_changed"
-	CaseEventRecommendationBooked   CaseEventType = "recommendation_booked"
+	CaseEventStatusChanged            CaseEventType = "status_changed"
+	CaseEventOpened                   CaseEventType = "case_opened"
+	CaseEventRecommendationReviewed   CaseEventType = "recommendation_reviewed"
+	CaseEventRecommendationTextEdited CaseEventType = "recommendation_text_edited"
+	CaseEventRecommendationAdded      CaseEventType = "recommendation_added"
+	CaseEventUrgencyChanged           CaseEventType = "urgency_changed"
+	CaseEventRecommendationBooked     CaseEventType = "recommendation_booked"
 )
 
 const ActorSystem = "system"
@@ -58,6 +59,16 @@ func RecommendationReviewed(rec Recommendation, patientTextEdited bool) CaseEven
 			"patient_text_edited": strconv.FormatBool(patientTextEdited),
 		},
 		OccurredAt: rec.Review.ReviewedAt,
+	}
+}
+
+func RecommendationTextEdited(rec Recommendation, actor string, at time.Time) CaseEvent {
+	return CaseEvent{
+		CaseID:     rec.CaseID,
+		Type:       CaseEventRecommendationTextEdited,
+		Actor:      actor,
+		Payload:    map[string]string{"recommendation_id": rec.ID.String()},
+		OccurredAt: at,
 	}
 }
 

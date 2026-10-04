@@ -117,6 +117,7 @@ type caseResponse struct {
 }
 
 type patientResponse struct {
+	ID        string `json:"id"`
 	FullName  string `json:"full_name"`
 	BirthDate string `json:"birth_date"`
 	Sex       string `json:"sex"`
@@ -157,6 +158,7 @@ type queueCaseResponse struct {
 	Patient                 patientResponse `json:"patient"`
 	RecommendationsTotal    int             `json:"recommendations_total"`
 	RecommendationsReviewed int             `json:"recommendations_reviewed"`
+	OpenedAt                time.Time       `json:"opened_at,omitzero"`
 }
 
 type reviewRecommendationRequest struct {
@@ -238,6 +240,7 @@ func newRecommendationResponse(r domain.Recommendation) recommendationResponse {
 
 func newPatientResponse(p domain.Patient) patientResponse {
 	return patientResponse{
+		ID:        p.ExternalID,
 		FullName:  p.FullName,
 		BirthDate: p.BirthDate.Format(time.DateOnly),
 		Sex:       string(p.Sex),
@@ -256,6 +259,7 @@ func newReviewQueueResponse(items []domain.ReviewQueueItem) reviewQueueResponse 
 			Patient:                 newPatientResponse(item.Patient),
 			RecommendationsTotal:    item.RecommendationsTotal,
 			RecommendationsReviewed: item.RecommendationsReviewed,
+			OpenedAt:                item.OpenedAt,
 		})
 	}
 	return resp
@@ -392,6 +396,37 @@ func newPlanCaseResponse(c domain.PlanCase) planCaseResponse {
 		},
 		Recommendations: recs,
 	}
+}
+
+type caseHistoryResponse struct {
+	Visits       []historyVisitResponse       `json:"visits"`
+	Appointments []historyAppointmentResponse `json:"appointments"`
+}
+
+type historyVisitResponse struct {
+	ServiceCode string    `json:"service_code"`
+	ServiceName string    `json:"service_name"`
+	VisitedAt   time.Time `json:"visited_at"`
+}
+
+type historyAppointmentResponse struct {
+	ServiceCode string    `json:"service_code"`
+	ServiceName string    `json:"service_name"`
+	ScheduledAt time.Time `json:"scheduled_at"`
+}
+
+func newCaseHistoryResponse(h domain.PatientHistory) caseHistoryResponse {
+	resp := caseHistoryResponse{
+		Visits:       make([]historyVisitResponse, 0, len(h.Visits)),
+		Appointments: make([]historyAppointmentResponse, 0, len(h.Appointments)),
+	}
+	for _, v := range h.Visits {
+		resp.Visits = append(resp.Visits, historyVisitResponse{ServiceCode: v.ServiceCode, ServiceName: v.ServiceName, VisitedAt: v.VisitedAt})
+	}
+	for _, a := range h.Appointments {
+		resp.Appointments = append(resp.Appointments, historyAppointmentResponse{ServiceCode: a.ServiceCode, ServiceName: a.ServiceName, ScheduledAt: a.ScheduledAt})
+	}
+	return resp
 }
 
 type advanceClockRequest struct {

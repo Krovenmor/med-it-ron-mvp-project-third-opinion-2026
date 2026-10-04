@@ -24,6 +24,7 @@ type Recommendations interface {
 	Get(ctx context.Context, caseID, id uuid.UUID) (domain.Recommendation, error)
 	ListByCase(ctx context.Context, caseID uuid.UUID) ([]domain.Recommendation, error)
 	UpdateReview(ctx context.Context, rec domain.Recommendation) error
+	UpdatePatientText(ctx context.Context, rec domain.Recommendation) error
 	Append(ctx context.Context, rec domain.Recommendation) (domain.Recommendation, error)
 }
 

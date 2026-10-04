@@ -22,8 +22,8 @@ var intakeModule = fx.Module("intake",
 		func(r *postgres.Recommendations) intake.Recommendations { return r },
 		func(r *postgres.Events) intake.Events { return r },
 		func(r *postgres.Jobs) intake.Jobs { return r },
+		func(c *mis.Client) intake.MIS { return c },
 		newAIService,
-		newMIS,
 		fx.Annotate(intake.NewService, fx.As(new(httptransport.Intake))),
 		fx.Annotate(intake.NewAssessor, fx.As(new(worker.Handler)), fx.ResultTags(jobHandlers)),
 	),
@@ -35,8 +35,4 @@ func newAIService(cfg config.Config, log *zap.Logger) intake.AIService {
 		return aiservice.NewMock()
 	}
 	return aiservice.NewClient(cfg.AIService.URL, cfg.AIService.Timeout)
-}
-
-func newMIS(cfg config.Config) intake.MIS {
-	return mis.NewClient(cfg.MIS.URL, cfg.MIS.Timeout)
 }
