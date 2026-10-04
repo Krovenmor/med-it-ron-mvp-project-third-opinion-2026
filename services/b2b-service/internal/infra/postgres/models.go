@@ -76,6 +76,16 @@ type reviewQueueRow struct {
 	RecommendationsReviewed int       `db:"recommendations_reviewed"`
 }
 
+type bookingRow struct {
+	ID               uuid.UUID `db:"id"`
+	CaseID           uuid.UUID `db:"case_id"`
+	RecommendationID uuid.UUID `db:"recommendation_id"`
+	AppointmentID    string    `db:"appointment_id"`
+	ScheduledAt      time.Time `db:"scheduled_at"`
+	Channel          string    `db:"channel"`
+	CreatedAt        time.Time `db:"created_at"`
+}
+
 type jobRow struct {
 	ID       int64     `db:"id"`
 	CaseID   uuid.UUID `db:"case_id"`
@@ -162,6 +172,18 @@ func (r reviewQueueRow) toDomain() domain.ReviewQueueItem {
 
 func (r serviceRow) toDomain() domain.Service {
 	return domain.Service{Code: r.Code, Name: r.Name}
+}
+
+func (r bookingRow) toDomain() domain.Booking {
+	return domain.Booking{
+		ID:               r.ID,
+		CaseID:           r.CaseID,
+		RecommendationID: r.RecommendationID,
+		AppointmentID:    r.AppointmentID,
+		ScheduledAt:      r.ScheduledAt,
+		Channel:          domain.BookingChannel(r.Channel),
+		CreatedAt:        r.CreatedAt,
+	}
 }
 
 func (r jobRow) toDomain() domain.Job {
@@ -257,6 +279,17 @@ func updateReviewArgs(r domain.Recommendation) pgx.StrictNamedArgs {
 		"marked_by":      r.Review.ReviewedBy,
 		"marked_at":      r.Review.ReviewedAt,
 		"patient_text":   r.PatientText,
+	}
+}
+
+func insertBookingArgs(b domain.Booking) pgx.StrictNamedArgs {
+	return pgx.StrictNamedArgs{
+		"case_id":           b.CaseID,
+		"recommendation_id": b.RecommendationID,
+		"appointment_id":    b.AppointmentID,
+		"scheduled_at":      b.ScheduledAt,
+		"channel":           string(b.Channel),
+		"created_at":        b.CreatedAt,
 	}
 }
 

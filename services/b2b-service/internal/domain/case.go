@@ -196,6 +196,37 @@ func (c *Case) Confirm(recs []Recommendation, now time.Time) error {
 	return nil
 }
 
+func (c Case) Confirmed() bool {
+	switch c.Status {
+	case CaseStatusConfirmed, CaseStatusNotified, CaseStatusBooked, CaseStatusCompleted, CaseStatusDeclined, CaseStatusUnreachable:
+		return true
+	}
+	return false
+}
+
+func (c Case) NeedsUrgentContact() bool {
+	if c.Urgency != UrgencyEmergency {
+		return false
+	}
+	switch c.Status {
+	case CaseStatusInReview, CaseStatusConfirmed, CaseStatusNotified:
+		return true
+	}
+	return false
+}
+
+func (c *Case) Book(now time.Time) (bool, error) {
+	switch c.Status {
+	case CaseStatusBooked:
+		return false, nil
+	case CaseStatusConfirmed, CaseStatusNotified:
+		c.Status = CaseStatusBooked
+		c.UpdatedAt = now
+		return true, nil
+	}
+	return false, fmt.Errorf("%w: case is %s and cannot be booked", ErrInvalidState, c.Status)
+}
+
 func invalid(reason string) error {
 	return fmt.Errorf("%w: %s", ErrInvalidInput, reason)
 }

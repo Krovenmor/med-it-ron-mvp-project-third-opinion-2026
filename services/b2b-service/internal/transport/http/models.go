@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/b2b-service/internal/domain"
+	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/b2b-service/internal/service/booking"
 	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/b2b-service/internal/service/cases"
 	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/b2b-service/internal/service/review"
 )
@@ -283,6 +284,113 @@ func newCaseResponse(d cases.Details) caseResponse {
 		UpdatedAt:         c.UpdatedAt,
 		Patient:           newPatientResponse(d.Patient),
 		Recommendations:   recs,
+	}
+}
+
+type bookingRequest struct {
+	RecommendationID string `json:"recommendation_id"`
+	AppointmentID    string `json:"appointment_id"`
+	ScheduledAt      string `json:"scheduled_at"`
+	Channel          string `json:"channel"`
+}
+
+type bookingResponse struct {
+	BookingID        uuid.UUID `json:"booking_id"`
+	CaseID           uuid.UUID `json:"case_id"`
+	RecommendationID uuid.UUID `json:"recommendation_id"`
+	AppointmentID    string    `json:"appointment_id"`
+	CaseStatus       string    `json:"case_status"`
+}
+
+type patientPlanResponse struct {
+	Patient planPatientResponse `json:"patient"`
+	Cases   []planCaseResponse  `json:"cases"`
+}
+
+type planPatientResponse struct {
+	FullName string `json:"full_name"`
+}
+
+type planCaseResponse struct {
+	CaseID          uuid.UUID                    `json:"case_id"`
+	Status          string                       `json:"status"`
+	UrgentContact   bool                         `json:"urgent_contact"`
+	Study           planStudyResponse            `json:"study"`
+	Recommendations []planRecommendationResponse `json:"recommendations"`
+}
+
+type planStudyResponse struct {
+	Modality    string    `json:"modality"`
+	PerformedAt time.Time `json:"performed_at"`
+}
+
+type planRecommendationResponse struct {
+	ID          uuid.UUID `json:"id"`
+	ServiceCode string    `json:"service_code"`
+	ServiceName string    `json:"service_name"`
+	PatientText string    `json:"patient_text"`
+	Mark        string    `json:"mark"`
+}
+
+func (r bookingRequest) toCommand(caseID uuid.UUID) (booking.Book, error) {
+	recommendationID, err := uuid.Parse(r.RecommendationID)
+	if err != nil {
+		return booking.Book{}, fmt.Errorf("%w: recommendation_id must be a UUID", domain.ErrInvalidInput)
+	}
+	scheduledAt, err := parseOptionalTime("scheduled_at", r.ScheduledAt, time.RFC3339, "an RFC 3339 date-time")
+	if err != nil {
+		return booking.Book{}, err
+	}
+	return booking.Book{
+		CaseID:           caseID,
+		RecommendationID: recommendationID,
+		AppointmentID:    r.AppointmentID,
+		ScheduledAt:      scheduledAt,
+		Channel:          domain.BookingChannel(r.Channel),
+	}, nil
+}
+
+func newBookingResponse(r booking.Result) bookingResponse {
+	return bookingResponse{
+		BookingID:        r.Booking.ID,
+		CaseID:           r.Booking.CaseID,
+		RecommendationID: r.Booking.RecommendationID,
+		AppointmentID:    r.Booking.AppointmentID,
+		CaseStatus:       string(r.CaseStatus),
+	}
+}
+
+func newPatientPlanResponse(p domain.PatientPlan) patientPlanResponse {
+	resp := patientPlanResponse{
+		Patient: planPatientResponse{FullName: p.Patient.FullName},
+		Cases:   make([]planCaseResponse, 0, len(p.Cases)),
+	}
+	for _, c := range p.Cases {
+		resp.Cases = append(resp.Cases, newPlanCaseResponse(c))
+	}
+	return resp
+}
+
+func newPlanCaseResponse(c domain.PlanCase) planCaseResponse {
+	recs := make([]planRecommendationResponse, 0, len(c.Recommendations))
+	for _, r := range c.Recommendations {
+		recs = append(recs, planRecommendationResponse{
+			ID:          r.ID,
+			ServiceCode: r.ServiceCode,
+			ServiceName: r.ServiceName,
+			PatientText: r.PatientText,
+			Mark:        string(r.Review.Mark),
+		})
+	}
+	return planCaseResponse{
+		CaseID:        c.Case.ID,
+		Status:        string(c.Case.Status),
+		UrgentContact: c.UrgentContact,
+		Study: planStudyResponse{
+			Modality:    string(c.Case.Study.Modality),
+			PerformedAt: c.Case.Study.PerformedAt,
+		},
+		Recommendations: recs,
 	}
 }
 

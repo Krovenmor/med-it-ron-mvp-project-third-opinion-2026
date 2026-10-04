@@ -107,6 +107,24 @@ func (c *apiClient) confirm(t *testing.T, actor, caseID string) (int, caseRef) {
 	return status, decode[caseRef](t, body)
 }
 
+func (c *apiClient) plan(t *testing.T, sourceSystem, patientID string) (int, planView, []byte) {
+	t.Helper()
+	status, body := c.do(t, http.MethodGet, "/api/v1/patients/"+patientID+"/plan?source_system="+sourceSystem, nil)
+	if status != http.StatusOK {
+		return status, planView{}, body
+	}
+	return status, decode[planView](t, body), body
+}
+
+func (c *apiClient) registerBooking(t *testing.T, caseID string, req bookingRequest) (int, bookingView) {
+	t.Helper()
+	status, body := c.do(t, http.MethodPost, "/api/v1/cases/"+caseID+"/bookings", mustJSON(t, req))
+	if status != http.StatusOK && status != http.StatusCreated {
+		return status, bookingView{}
+	}
+	return status, decode[bookingView](t, body)
+}
+
 func poll(cond func() bool) bool {
 	deadline := time.Now().Add(settleTimeout)
 	for !cond() {

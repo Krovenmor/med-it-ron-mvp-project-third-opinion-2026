@@ -73,6 +73,22 @@ func (r *Cases) ReviewQueue(ctx context.Context) ([]domain.ReviewQueueItem, erro
 	return items, nil
 }
 
+func (r *Cases) ListByPatient(ctx context.Context, patientID uuid.UUID) ([]domain.Case, error) {
+	rows, err := r.db(ctx).Query(ctx, r.q.ListByPatient, pgx.StrictNamedArgs{"patient_id": patientID})
+	if err != nil {
+		return nil, fmt.Errorf("list patient cases: %w", err)
+	}
+	found, err := pgx.CollectRows(rows, pgx.RowToStructByName[caseRow])
+	if err != nil {
+		return nil, fmt.Errorf("scan patient cases: %w", err)
+	}
+	cases := make([]domain.Case, 0, len(found))
+	for _, row := range found {
+		cases = append(cases, row.toDomain())
+	}
+	return cases, nil
+}
+
 func (r *Cases) getOne(ctx context.Context, q string, args pgx.StrictNamedArgs) (domain.Case, error) {
 	rows, err := r.db(ctx).Query(ctx, q, args)
 	if err != nil {

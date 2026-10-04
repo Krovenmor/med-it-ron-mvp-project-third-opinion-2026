@@ -32,13 +32,21 @@ func (r *Patients) Upsert(ctx context.Context, p domain.Patient, now time.Time) 
 }
 
 func (r *Patients) Get(ctx context.Context, id uuid.UUID) (domain.Patient, error) {
-	rows, err := r.db(ctx).Query(ctx, r.q.Get, pgx.StrictNamedArgs{"id": id})
+	return r.getOne(ctx, r.q.Get, pgx.StrictNamedArgs{"id": id})
+}
+
+func (r *Patients) GetByExternalID(ctx context.Context, sourceSystem, externalID string) (domain.Patient, error) {
+	return r.getOne(ctx, r.q.GetByExternalID, pgx.StrictNamedArgs{"source_system": sourceSystem, "external_id": externalID})
+}
+
+func (r *Patients) getOne(ctx context.Context, q string, args pgx.StrictNamedArgs) (domain.Patient, error) {
+	rows, err := r.db(ctx).Query(ctx, q, args)
 	if err != nil {
 		return domain.Patient{}, fmt.Errorf("get patient: %w", err)
 	}
 	row, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[patientRow])
 	if errors.Is(err, pgx.ErrNoRows) {
-		return domain.Patient{}, fmt.Errorf("patient %s: %w", id, domain.ErrNotFound)
+		return domain.Patient{}, fmt.Errorf("patient: %w", domain.ErrNotFound)
 	}
 	if err != nil {
 		return domain.Patient{}, fmt.Errorf("scan patient: %w", err)

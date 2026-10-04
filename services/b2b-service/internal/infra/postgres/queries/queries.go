@@ -15,11 +15,13 @@ type Queries struct {
 	Recommendations Recommendations
 	CaseEvents      CaseEvents
 	Jobs            Jobs
+	Bookings        Bookings
 }
 
 type Patients struct {
-	Upsert string
-	Get    string
+	Upsert          string
+	Get             string
+	GetByExternalID string
 }
 
 type Cases struct {
@@ -29,6 +31,7 @@ type Cases struct {
 	GetByStudy      string
 	Update          string
 	ListReviewQueue string
+	ListByPatient   string
 }
 
 type Recommendations struct {
@@ -38,6 +41,11 @@ type Recommendations struct {
 	UpdateReview       string
 	ListByCase         string
 	ListActiveServices string
+}
+
+type Bookings struct {
+	InsertIfAbsent   string
+	GetByAppointment string
 }
 
 type CaseEvents struct {
@@ -65,8 +73,9 @@ func Load() (Queries, error) {
 
 	q := Queries{
 		Patients: Patients{
-			Upsert: read("patients/upsert.sql"),
-			Get:    read("patients/get.sql"),
+			Upsert:          read("patients/upsert.sql"),
+			Get:             read("patients/get.sql"),
+			GetByExternalID: read("patients/get_by_external_id.sql"),
 		},
 		Cases: Cases{
 			InsertIfAbsent:  read("cases/insert_if_absent.sql"),
@@ -75,6 +84,7 @@ func Load() (Queries, error) {
 			GetByStudy:      read("cases/get_by_study.sql"),
 			Update:          read("cases/update.sql"),
 			ListReviewQueue: read("cases/list_review_queue.sql"),
+			ListByPatient:   read("cases/list_by_patient.sql"),
 		},
 		Recommendations: Recommendations{
 			Insert:             read("recommendations/insert.sql"),
@@ -83,6 +93,10 @@ func Load() (Queries, error) {
 			UpdateReview:       read("recommendations/update_review.sql"),
 			ListByCase:         read("recommendations/list_by_case.sql"),
 			ListActiveServices: read("recommendations/list_active_services.sql"),
+		},
+		Bookings: Bookings{
+			InsertIfAbsent:   read("bookings/insert_if_absent.sql"),
+			GetByAppointment: read("bookings/get_by_appointment.sql"),
 		},
 		CaseEvents: CaseEvents{
 			Insert: read("case_events/insert.sql"),

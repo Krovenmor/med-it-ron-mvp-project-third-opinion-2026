@@ -7,15 +7,25 @@ import (
 )
 
 type Handler struct {
-	intake Intake
-	cases  Cases
-	review Review
-	clock  DemoClock
-	log    *zap.Logger
+	intake   Intake
+	cases    Cases
+	review   Review
+	plan     Plan
+	bookings Bookings
+	clock    DemoClock
+	log      *zap.Logger
 }
 
-func NewHandler(intake Intake, cases Cases, review Review, clock DemoClock, log *zap.Logger) *Handler {
-	return &Handler{intake: intake, cases: cases, review: review, clock: clock, log: log.Named("http")}
+func NewHandler(intake Intake, cases Cases, review Review, plan Plan, bookings Bookings, clock DemoClock, log *zap.Logger) *Handler {
+	return &Handler{
+		intake:   intake,
+		cases:    cases,
+		review:   review,
+		plan:     plan,
+		bookings: bookings,
+		clock:    clock,
+		log:      log.Named("http"),
+	}
 }
 
 func (h *Handler) Routes(demoMode bool) http.Handler {
@@ -28,6 +38,8 @@ func (h *Handler) Routes(demoMode bool) http.Handler {
 	mux.HandleFunc("POST /api/v1/cases/{id}/recommendations", h.addRecommendation)
 	mux.HandleFunc("PUT /api/v1/cases/{id}/urgency", h.changeUrgency)
 	mux.HandleFunc("POST /api/v1/cases/{id}/confirm", h.confirmCase)
+	mux.HandleFunc("POST /api/v1/cases/{id}/bookings", h.registerBooking)
+	mux.HandleFunc("GET /api/v1/patients/{external_id}/plan", h.patientPlan)
 	if demoMode {
 		mux.HandleFunc("POST /demo/clock/advance", h.advanceClock)
 	}

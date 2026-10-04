@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/b2b-service/internal/domain"
+	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/b2b-service/internal/service/booking"
 	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/b2b-service/internal/service/cases"
 	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/b2b-service/internal/service/intake"
 	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/b2b-service/internal/service/review"
@@ -27,6 +28,14 @@ type Review interface {
 	AddRecommendation(ctx context.Context, cmd review.AddRecommendation) (domain.Recommendation, error)
 	ChangeUrgency(ctx context.Context, cmd review.ChangeUrgency) error
 	Confirm(ctx context.Context, caseID uuid.UUID, actor string) (domain.Case, error)
+}
+
+type Plan interface {
+	Get(ctx context.Context, sourceSystem, externalID string) (domain.PatientPlan, error)
+}
+
+type Bookings interface {
+	Book(ctx context.Context, cmd booking.Book) (booking.Result, error)
 }
 
 type DemoClock interface {

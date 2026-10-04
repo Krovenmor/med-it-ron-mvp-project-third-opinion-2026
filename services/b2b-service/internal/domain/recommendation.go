@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -127,6 +128,20 @@ func (r *Recommendation) ApplyReview(review Review, patientText *string) error {
 		r.PatientText = *patientText
 	}
 	r.Review = review
+	return nil
+}
+
+func (r Recommendation) VisibleToPatient() bool {
+	return r.Reviewed() && r.Review.Mark != MarkRejected
+}
+
+func (r Recommendation) EnsureBookable() error {
+	switch {
+	case !r.VisibleToPatient():
+		return fmt.Errorf("%w: recommendation is not confirmed by a doctor", ErrInvalidState)
+	case r.ServiceCode == "":
+		return fmt.Errorf("%w: service is not available in the clinic", ErrInvalidState)
+	}
 	return nil
 }
 

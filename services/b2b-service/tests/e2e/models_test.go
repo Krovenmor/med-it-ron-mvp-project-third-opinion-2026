@@ -126,6 +126,51 @@ type urgencyRequest struct {
 	Reason  string `json:"reason,omitempty"`
 }
 
+type planView struct {
+	Patient planPatientView `json:"patient"`
+	Cases   []planCaseView  `json:"cases"`
+}
+
+type planPatientView struct {
+	FullName string `json:"full_name"`
+}
+
+type planCaseView struct {
+	CaseID          string               `json:"case_id"`
+	Status          string               `json:"status"`
+	UrgentContact   bool                 `json:"urgent_contact"`
+	Study           planStudyView        `json:"study"`
+	Recommendations []planRecommendation `json:"recommendations"`
+}
+
+type planStudyView struct {
+	Modality    string    `json:"modality"`
+	PerformedAt time.Time `json:"performed_at"`
+}
+
+type planRecommendation struct {
+	ID          string `json:"id"`
+	ServiceCode string `json:"service_code"`
+	ServiceName string `json:"service_name"`
+	PatientText string `json:"patient_text"`
+	Mark        string `json:"mark"`
+}
+
+type bookingRequest struct {
+	RecommendationID string `json:"recommendation_id"`
+	AppointmentID    string `json:"appointment_id"`
+	ScheduledAt      string `json:"scheduled_at"`
+	Channel          string `json:"channel"`
+}
+
+type bookingView struct {
+	BookingID        string `json:"booking_id"`
+	CaseID           string `json:"case_id"`
+	RecommendationID string `json:"recommendation_id"`
+	AppointmentID    string `json:"appointment_id"`
+	CaseStatus       string `json:"case_status"`
+}
+
 type caseEventView struct {
 	Type    string            `db:"type"`
 	Actor   string            `db:"actor"`

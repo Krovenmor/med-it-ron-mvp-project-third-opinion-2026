@@ -15,6 +15,7 @@ const (
 	CaseEventRecommendationReviewed CaseEventType = "recommendation_reviewed"
 	CaseEventRecommendationAdded    CaseEventType = "recommendation_added"
 	CaseEventUrgencyChanged         CaseEventType = "urgency_changed"
+	CaseEventRecommendationBooked   CaseEventType = "recommendation_booked"
 )
 
 const ActorSystem = "system"
@@ -70,6 +71,21 @@ func RecommendationAdded(rec Recommendation) CaseEvent {
 			"mark":              string(rec.Review.Mark),
 		},
 		OccurredAt: rec.CreatedAt,
+	}
+}
+
+func RecommendationBooked(b Booking) CaseEvent {
+	return CaseEvent{
+		CaseID: b.CaseID,
+		Type:   CaseEventRecommendationBooked,
+		Actor:  b.Channel.Actor(),
+		Payload: map[string]string{
+			"recommendation_id": b.RecommendationID.String(),
+			"appointment_id":    b.AppointmentID,
+			"scheduled_at":      b.ScheduledAt.Format(time.RFC3339),
+			"channel":           string(b.Channel),
+		},
+		OccurredAt: b.CreatedAt,
 	}
 }
 

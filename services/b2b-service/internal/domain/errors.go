@@ -7,5 +7,6 @@ var (
 	ErrNotFound      = errors.New("not found")
 	ErrStudyConflict = errors.New("study already received with different content")
 	ErrInvalidState  = errors.New("invalid state")
+	ErrConflict      = errors.New("conflict")
 	ErrLeaseLost     = errors.New("job lease lost")
 )
