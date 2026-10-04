@@ -1,6 +1,6 @@
 # Контракт main-B2B ↔ ai-service
 
-Версия контракта: `v1`. Источник истины на стороне main-B2B — `services/b2b-service/internal/infra/aiservice/client.go`.
+Версия контракта: `v1`. Источник истины на стороне main-B2B — `services/b2b-service/internal/infra/aiservice/models.go`.
 
 ## Взаимодействие
 
