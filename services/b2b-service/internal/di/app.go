@@ -24,6 +24,7 @@ import (
 	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/b2b-service/internal/infra/postgres/queries"
 	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/b2b-service/internal/service/cases"
 	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/b2b-service/internal/service/intake"
+	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/b2b-service/internal/service/review"
 	httptransport "github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/b2b-service/internal/transport/http"
 	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/b2b-service/internal/transport/worker"
 )
@@ -47,15 +48,20 @@ func App() fx.Option {
 			fx.Annotate(clock.New,
 				fx.As(fx.Self()),
 				fx.As(new(intake.Clock)),
+				fx.As(new(review.Clock)),
 				fx.As(new(worker.Clock)),
 				fx.As(new(httptransport.DemoClock)),
 			),
 		),
 		fx.Provide(
-			fx.Annotate(postgres.NewPatients, fx.As(new(intake.Patients))),
-			fx.Annotate(postgres.NewCases, fx.As(new(intake.Cases)), fx.As(new(cases.Cases))),
-			fx.Annotate(postgres.NewRecommendations, fx.As(new(intake.Recommendations)), fx.As(new(cases.Recommendations))),
-			fx.Annotate(postgres.NewEvents, fx.As(new(intake.Events))),
+			fx.Annotate(postgres.NewPatients, fx.As(new(intake.Patients)), fx.As(new(cases.Patients))),
+			fx.Annotate(postgres.NewCases, fx.As(new(intake.Cases)), fx.As(new(cases.Cases)), fx.As(new(review.Cases))),
+			fx.Annotate(postgres.NewRecommendations,
+				fx.As(new(intake.Recommendations)),
+				fx.As(new(cases.Recommendations)),
+				fx.As(new(review.Recommendations)),
+			),
+			fx.Annotate(postgres.NewEvents, fx.As(new(intake.Events)), fx.As(new(review.Events))),
 			fx.Annotate(postgres.NewJobs, fx.As(new(intake.Jobs)), fx.As(new(worker.Queue))),
 			newMIS,
 			newAIService,
@@ -64,6 +70,7 @@ func App() fx.Option {
 			fx.Annotate(intake.NewService, fx.As(new(httptransport.Intake))),
 			fx.Annotate(intake.NewAssessor, fx.As(new(worker.Handler)), fx.ResultTags(jobHandlers)),
 			fx.Annotate(cases.NewService, fx.As(new(httptransport.Cases))),
+			fx.Annotate(review.NewService, fx.As(new(httptransport.Review))),
 			httptransport.NewHandler,
 			fx.Annotate(worker.NewPool, fx.ParamTags(``, ``, ``, ``, jobHandlers)),
 		),

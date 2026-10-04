@@ -67,13 +67,69 @@ type caseView struct {
 	GuidelinesVersion string               `json:"guidelines_version"`
 	ReceivedAt        time.Time            `json:"received_at"`
 	UpdatedAt         time.Time            `json:"updated_at"`
+	Patient           patientView          `json:"patient"`
 	Recommendations   []caseRecommendation `json:"recommendations"`
+}
+
+type patientView struct {
+	FullName  string `json:"full_name"`
+	BirthDate string `json:"birth_date"`
+	Sex       string `json:"sex"`
 }
 
 type caseRecommendation struct {
 	recommendation
-	Position int    `json:"position"`
-	Source   string `json:"source"`
+	ID       string      `json:"id"`
+	Position int         `json:"position"`
+	Source   string      `json:"source"`
+	Review   *reviewView `json:"review"`
+}
+
+type reviewView struct {
+	Mark          string    `json:"mark"`
+	RejectReason  string    `json:"reject_reason"`
+	RejectComment string    `json:"reject_comment"`
+	ReviewedBy    string    `json:"reviewed_by"`
+	ReviewedAt    time.Time `json:"reviewed_at"`
+}
+
+type reviewQueueView struct {
+	Cases []queueCaseView `json:"cases"`
+}
+
+type queueCaseView struct {
+	CaseID                  string      `json:"case_id"`
+	Urgency                 string      `json:"urgency"`
+	Modality                string      `json:"modality"`
+	Patient                 patientView `json:"patient"`
+	RecommendationsTotal    int         `json:"recommendations_total"`
+	RecommendationsReviewed int         `json:"recommendations_reviewed"`
+}
+
+type reviewRequest struct {
+	Mark          string  `json:"mark"`
+	RejectReason  string  `json:"reject_reason,omitempty"`
+	RejectComment string  `json:"reject_comment,omitempty"`
+	PatientText   *string `json:"patient_text,omitempty"`
+}
+
+type addRecommendationRequest struct {
+	ServiceCode string `json:"service_code,omitempty"`
+	ServiceName string `json:"service_name"`
+	Rationale   string `json:"rationale,omitempty"`
+	PatientText string `json:"patient_text"`
+	Mark        string `json:"mark"`
+}
+
+type urgencyRequest struct {
+	Urgency string `json:"urgency"`
+	Reason  string `json:"reason,omitempty"`
+}
+
+type caseEventView struct {
+	Type    string            `db:"type"`
+	Actor   string            `db:"actor"`
+	Payload map[string]string `db:"payload"`
 }
 
 type assessment struct {

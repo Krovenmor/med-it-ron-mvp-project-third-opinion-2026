@@ -132,7 +132,7 @@ func TestIngest_ConcurrentDuplicatesCreateSingleCase(t *testing.T) {
 	)
 	for range senders {
 		wg.Go(func() {
-			status, resp, err := api.send(http.MethodPost, "/api/v1/reports", body)
+			status, resp, err := api.send(http.MethodPost, "/api/v1/reports", body, "")
 			var ref caseRef
 			if err == nil {
 				err = json.Unmarshal(resp, &ref)

@@ -3,6 +3,7 @@ package domain
 import (
 	"crypto/sha256"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -31,11 +32,21 @@ const (
 )
 
 func (u Urgency) Valid() bool {
+	return u.rank() >= 0
+}
+
+func (u Urgency) rank() int {
 	switch u {
-	case UrgencyNormal, UrgencyPlanned, UrgencyPriority, UrgencyEmergency:
-		return true
+	case UrgencyNormal:
+		return 0
+	case UrgencyPlanned:
+		return 1
+	case UrgencyPriority:
+		return 2
+	case UrgencyEmergency:
+		return 3
 	}
-	return false
+	return -1
 }
 
 type Modality string
@@ -141,6 +152,48 @@ func (c *Case) ApplyAssessment(a Assessment, now time.Time) {
 	c.GuidelinesVersion = a.GuidelinesVersion
 	c.Status = CaseStatusInReview
 	c.UpdatedAt = now
+}
+
+func (c Case) EnsureInReview() error {
+	if c.Status != CaseStatusInReview {
+		return fmt.Errorf("%w: case is %s, expected %s", ErrInvalidState, c.Status, CaseStatusInReview)
+	}
+	return nil
+}
+
+func (c *Case) ChangeUrgency(to Urgency, reason string, now time.Time) error {
+	if err := c.EnsureInReview(); err != nil {
+		return err
+	}
+	switch {
+	case !to.Valid():
+		return invalid("urgency must be one of normal, planned, priority, emergency")
+	case to == c.Urgency:
+		return invalid("urgency is already " + string(to))
+	case to.rank() < c.Urgency.rank() && strings.TrimSpace(reason) == "":
+		return invalid("reason is required when lowering urgency")
+	}
+	c.Urgency = to
+	c.UpdatedAt = now
+	return nil
+}
+
+func (c *Case) Confirm(recs []Recommendation, now time.Time) error {
+	if err := c.EnsureInReview(); err != nil {
+		return err
+	}
+	pending := 0
+	for _, r := range recs {
+		if !r.Reviewed() {
+			pending++
+		}
+	}
+	if pending > 0 {
+		return fmt.Errorf("%w: %d recommendations are not reviewed", ErrInvalidState, pending)
+	}
+	c.Status = CaseStatusConfirmed
+	c.UpdatedAt = now
+	return nil
 }
 
 func invalid(reason string) error {

@@ -39,23 +39,41 @@ type caseRow struct {
 }
 
 type recommendationRow struct {
-	ID            uuid.UUID `db:"id"`
-	CaseID        uuid.UUID `db:"case_id"`
-	Position      int       `db:"position"`
-	Source        string    `db:"source"`
-	ServiceCode   string    `db:"service_code"`
-	ServiceName   string    `db:"service_name"`
-	Importance    string    `db:"importance"`
-	Rationale     string    `db:"rationale"`
-	GuidelineRef  string    `db:"guideline_ref"`
-	PatientText   string    `db:"patient_text"`
-	AlreadyBooked bool      `db:"already_booked"`
-	CreatedAt     time.Time `db:"created_at"`
+	ID            uuid.UUID  `db:"id"`
+	CaseID        uuid.UUID  `db:"case_id"`
+	Position      int        `db:"position"`
+	Source        string     `db:"source"`
+	ServiceCode   string     `db:"service_code"`
+	ServiceName   string     `db:"service_name"`
+	Importance    string     `db:"importance"`
+	Rationale     string     `db:"rationale"`
+	GuidelineRef  string     `db:"guideline_ref"`
+	PatientText   string     `db:"patient_text"`
+	AlreadyBooked bool       `db:"already_booked"`
+	Mark          *string    `db:"mark"`
+	RejectReason  *string    `db:"reject_reason"`
+	RejectComment *string    `db:"reject_comment"`
+	MarkedBy      *string    `db:"marked_by"`
+	MarkedAt      *time.Time `db:"marked_at"`
+	CreatedAt     time.Time  `db:"created_at"`
 }
 
 type serviceRow struct {
 	Code string `db:"service_code"`
 	Name string `db:"service_name"`
+}
+
+type reviewQueueRow struct {
+	CaseID                  uuid.UUID `db:"case_id"`
+	Urgency                 *string   `db:"urgency"`
+	Modality                string    `db:"modality"`
+	PerformedAt             time.Time `db:"performed_at"`
+	ReceivedAt              time.Time `db:"received_at"`
+	PatientFullName         string    `db:"patient_full_name"`
+	PatientBirthDate        time.Time `db:"patient_birth_date"`
+	PatientSex              string    `db:"patient_sex"`
+	RecommendationsTotal    int       `db:"recommendations_total"`
+	RecommendationsReviewed int       `db:"recommendations_reviewed"`
 }
 
 type jobRow struct {
@@ -80,10 +98,6 @@ func (r patientRow) toDomain() domain.Patient {
 }
 
 func (r caseRow) toDomain() domain.Case {
-	var urgency domain.Urgency
-	if r.Urgency != nil {
-		urgency = domain.Urgency(*r.Urgency)
-	}
 	return domain.Case{
 		ID:           r.ID,
 		PatientID:    r.PatientID,
@@ -97,7 +111,7 @@ func (r caseRow) toDomain() domain.Case {
 		Conclusion:        r.Conclusion,
 		Fingerprint:       r.Fingerprint,
 		Status:            domain.CaseStatus(r.Status),
-		Urgency:           urgency,
+		Urgency:           domain.Urgency(valueOf(r.Urgency)),
 		CatalogVersion:    r.CatalogVersion,
 		GuidelinesVersion: r.GuidelinesVersion,
 		ReceivedAt:        r.ReceivedAt,
@@ -118,7 +132,31 @@ func (r recommendationRow) toDomain() domain.Recommendation {
 		GuidelineRef:  r.GuidelineRef,
 		PatientText:   r.PatientText,
 		AlreadyBooked: r.AlreadyBooked,
-		CreatedAt:     r.CreatedAt,
+		Review: domain.Review{
+			Mark:          domain.Mark(valueOf(r.Mark)),
+			RejectReason:  domain.RejectReason(valueOf(r.RejectReason)),
+			RejectComment: valueOf(r.RejectComment),
+			ReviewedBy:    valueOf(r.MarkedBy),
+			ReviewedAt:    valueOf(r.MarkedAt),
+		},
+		CreatedAt: r.CreatedAt,
+	}
+}
+
+func (r reviewQueueRow) toDomain() domain.ReviewQueueItem {
+	return domain.ReviewQueueItem{
+		CaseID:      r.CaseID,
+		Urgency:     domain.Urgency(valueOf(r.Urgency)),
+		Modality:    domain.Modality(r.Modality),
+		PerformedAt: r.PerformedAt,
+		ReceivedAt:  r.ReceivedAt,
+		Patient: domain.Patient{
+			FullName:  r.PatientFullName,
+			BirthDate: r.PatientBirthDate,
+			Sex:       domain.Sex(r.PatientSex),
+		},
+		RecommendationsTotal:    r.RecommendationsTotal,
+		RecommendationsReviewed: r.RecommendationsReviewed,
 	}
 }
 
@@ -192,8 +230,43 @@ func insertRecommendationArgs(r domain.Recommendation) pgx.StrictNamedArgs {
 	}
 }
 
-func insertCaseEventArgs(e domain.CaseEvent) pgx.StrictNamedArgs {
+func appendRecommendationArgs(r domain.Recommendation) pgx.StrictNamedArgs {
 	return pgx.StrictNamedArgs{
+		"case_id":        r.CaseID,
+		"source":         string(r.Source),
+		"service_code":   r.ServiceCode,
+		"service_name":   r.ServiceName,
+		"importance":     string(r.Importance),
+		"rationale":      r.Rationale,
+		"guideline_ref":  r.GuidelineRef,
+		"patient_text":   r.PatientText,
+		"already_booked": r.AlreadyBooked,
+		"mark":           string(r.Review.Mark),
+		"marked_by":      r.Review.ReviewedBy,
+		"marked_at":      r.Review.ReviewedAt,
+		"created_at":     r.CreatedAt,
+	}
+}
+
+func updateReviewArgs(r domain.Recommendation) pgx.StrictNamedArgs {
+	return pgx.StrictNamedArgs{
+		"id":             r.ID,
+		"mark":           string(r.Review.Mark),
+		"reject_reason":  string(r.Review.RejectReason),
+		"reject_comment": r.Review.RejectComment,
+		"marked_by":      r.Review.ReviewedBy,
+		"marked_at":      r.Review.ReviewedAt,
+		"patient_text":   r.PatientText,
+	}
+}
+
+func insertCaseEventArgs(e domain.CaseEvent) pgx.StrictNamedArgs {
+	payload := e.Payload
+	if payload == nil {
+		payload = map[string]string{}
+	}
+	return pgx.StrictNamedArgs{
+		"payload":     payload,
 		"case_id":     e.CaseID,
 		"type":        string(e.Type),
 		"from_status": string(e.FromStatus),
@@ -241,4 +314,12 @@ func failJobArgs(job domain.Job, cause string) pgx.StrictNamedArgs {
 		"attempts":   job.Attempts,
 		"last_error": cause,
 	}
+}
+
+func valueOf[T any](p *T) T {
+	var zero T
+	if p == nil {
+		return zero
+	}
+	return *p
 }

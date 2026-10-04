@@ -25,6 +25,15 @@ func patientPhone(t *testing.T, externalID string) string {
 	return phone
 }
 
+func eventsOf(t *testing.T, caseID string) []caseEventView {
+	t.Helper()
+	rows, err := db.Query(context.Background(), query.ListEventsByCase, pgx.StrictNamedArgs{"case_id": caseID})
+	require.NoError(t, err)
+	events, err := pgx.CollectRows(rows, pgx.RowToStructByName[caseEventView])
+	require.NoError(t, err)
+	return events
+}
+
 func jobOf(t *testing.T, caseID string) jobState {
 	t.Helper()
 	rows, err := db.Query(context.Background(), query.GetJobByCase, pgx.StrictNamedArgs{"case_id": caseID})

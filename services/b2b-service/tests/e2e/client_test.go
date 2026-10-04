@@ -61,6 +61,52 @@ func (c *apiClient) awaitStatus(t *testing.T, id, want string) caseView {
 	return last
 }
 
+func (c *apiClient) reviewQueue(t *testing.T) reviewQueueView {
+	t.Helper()
+	status, body := c.do(t, http.MethodGet, "/api/v1/review/queue", nil)
+	require.Equal(t, http.StatusOK, status, "body: %s", body)
+	return decode[reviewQueueView](t, body)
+}
+
+func (c *apiClient) openCase(t *testing.T, actor, caseID string) int {
+	t.Helper()
+	status, _ := c.doAs(t, actor, http.MethodPost, "/api/v1/cases/"+caseID+"/open", nil)
+	return status
+}
+
+func (c *apiClient) reviewRecommendation(t *testing.T, actor, caseID, recID string, req reviewRequest) (int, caseRecommendation) {
+	t.Helper()
+	status, body := c.doAs(t, actor, http.MethodPatch, "/api/v1/cases/"+caseID+"/recommendations/"+recID, mustJSON(t, req))
+	if status != http.StatusOK {
+		return status, caseRecommendation{}
+	}
+	return status, decode[caseRecommendation](t, body)
+}
+
+func (c *apiClient) addRecommendation(t *testing.T, actor, caseID string, req addRecommendationRequest) (int, caseRecommendation) {
+	t.Helper()
+	status, body := c.doAs(t, actor, http.MethodPost, "/api/v1/cases/"+caseID+"/recommendations", mustJSON(t, req))
+	if status != http.StatusCreated {
+		return status, caseRecommendation{}
+	}
+	return status, decode[caseRecommendation](t, body)
+}
+
+func (c *apiClient) changeUrgency(t *testing.T, actor, caseID string, req urgencyRequest) int {
+	t.Helper()
+	status, _ := c.doAs(t, actor, http.MethodPut, "/api/v1/cases/"+caseID+"/urgency", mustJSON(t, req))
+	return status
+}
+
+func (c *apiClient) confirm(t *testing.T, actor, caseID string) (int, caseRef) {
+	t.Helper()
+	status, body := c.doAs(t, actor, http.MethodPost, "/api/v1/cases/"+caseID+"/confirm", nil)
+	if status != http.StatusOK {
+		return status, caseRef{}
+	}
+	return status, decode[caseRef](t, body)
+}
+
 func poll(cond func() bool) bool {
 	deadline := time.Now().Add(settleTimeout)
 	for !cond() {
@@ -74,12 +120,17 @@ func poll(cond func() bool) bool {
 
 func (c *apiClient) do(t *testing.T, method, path string, body []byte) (int, []byte) {
 	t.Helper()
-	status, respBody, err := c.send(method, path, body)
+	return c.doAs(t, "", method, path, body)
+}
+
+func (c *apiClient) doAs(t *testing.T, actor, method, path string, body []byte) (int, []byte) {
+	t.Helper()
+	status, respBody, err := c.send(method, path, body, actor)
 	require.NoError(t, err)
 	return status, respBody
 }
 
-func (c *apiClient) send(method, path string, body []byte) (int, []byte, error) {
+func (c *apiClient) send(method, path string, body []byte, actor string) (int, []byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -88,6 +139,9 @@ func (c *apiClient) send(method, path string, body []byte) (int, []byte, error) 
 		return 0, nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	if actor != "" {
+		req.Header.Set("X-User-ID", actor)
+	}
 
 	resp, err := c.http.Do(req)
 	if err != nil {

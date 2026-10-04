@@ -8,11 +8,12 @@ import (
 
 type Service struct {
 	cases           Cases
+	patients        Patients
 	recommendations Recommendations
 }
 
-func NewService(cases Cases, recommendations Recommendations) *Service {
-	return &Service{cases: cases, recommendations: recommendations}
+func NewService(cases Cases, patients Patients, recommendations Recommendations) *Service {
+	return &Service{cases: cases, patients: patients, recommendations: recommendations}
 }
 
 func (s *Service) Get(ctx context.Context, id uuid.UUID) (Details, error) {
@@ -20,9 +21,13 @@ func (s *Service) Get(ctx context.Context, id uuid.UUID) (Details, error) {
 	if err != nil {
 		return Details{}, err
 	}
+	patient, err := s.patients.Get(ctx, c.PatientID)
+	if err != nil {
+		return Details{}, err
+	}
 	recs, err := s.recommendations.ListByCase(ctx, id)
 	if err != nil {
 		return Details{}, err
 	}
-	return Details{Case: c, Recommendations: recs}, nil
+	return Details{Case: c, Patient: patient, Recommendations: recs}, nil
 }

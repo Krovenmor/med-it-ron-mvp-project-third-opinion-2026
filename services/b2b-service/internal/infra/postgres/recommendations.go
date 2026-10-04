@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -28,6 +29,44 @@ func (r *Recommendations) InsertMany(ctx context.Context, recs []domain.Recommen
 	}
 	if err := r.db(ctx).SendBatch(ctx, batch).Close(); err != nil {
 		return fmt.Errorf("insert recommendations: %w", err)
+	}
+	return nil
+}
+
+func (r *Recommendations) Append(ctx context.Context, rec domain.Recommendation) (domain.Recommendation, error) {
+	rows, err := r.db(ctx).Query(ctx, r.q.Append, appendRecommendationArgs(rec))
+	if err != nil {
+		return domain.Recommendation{}, fmt.Errorf("append recommendation: %w", err)
+	}
+	row, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[recommendationRow])
+	if err != nil {
+		return domain.Recommendation{}, fmt.Errorf("scan appended recommendation: %w", err)
+	}
+	return row.toDomain(), nil
+}
+
+func (r *Recommendations) Get(ctx context.Context, caseID, id uuid.UUID) (domain.Recommendation, error) {
+	rows, err := r.db(ctx).Query(ctx, r.q.Get, pgx.StrictNamedArgs{"id": id, "case_id": caseID})
+	if err != nil {
+		return domain.Recommendation{}, fmt.Errorf("get recommendation: %w", err)
+	}
+	row, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[recommendationRow])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return domain.Recommendation{}, fmt.Errorf("recommendation %s: %w", id, domain.ErrNotFound)
+	}
+	if err != nil {
+		return domain.Recommendation{}, fmt.Errorf("scan recommendation: %w", err)
+	}
+	return row.toDomain(), nil
+}
+
+func (r *Recommendations) UpdateReview(ctx context.Context, rec domain.Recommendation) error {
+	tag, err := r.db(ctx).Exec(ctx, r.q.UpdateReview, updateReviewArgs(rec))
+	if err != nil {
+		return fmt.Errorf("update recommendation review: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("recommendation %s: %w", rec.ID, domain.ErrNotFound)
 	}
 	return nil
 }

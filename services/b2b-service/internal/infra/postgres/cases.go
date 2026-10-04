@@ -57,6 +57,22 @@ func (r *Cases) Update(ctx context.Context, c domain.Case) error {
 	return nil
 }
 
+func (r *Cases) ReviewQueue(ctx context.Context) ([]domain.ReviewQueueItem, error) {
+	rows, err := r.db(ctx).Query(ctx, r.q.ListReviewQueue)
+	if err != nil {
+		return nil, fmt.Errorf("list review queue: %w", err)
+	}
+	found, err := pgx.CollectRows(rows, pgx.RowToStructByName[reviewQueueRow])
+	if err != nil {
+		return nil, fmt.Errorf("scan review queue: %w", err)
+	}
+	items := make([]domain.ReviewQueueItem, 0, len(found))
+	for _, row := range found {
+		items = append(items, row.toDomain())
+	}
+	return items, nil
+}
+
 func (r *Cases) getOne(ctx context.Context, q string, args pgx.StrictNamedArgs) (domain.Case, error) {
 	rows, err := r.db(ctx).Query(ctx, q, args)
 	if err != nil {

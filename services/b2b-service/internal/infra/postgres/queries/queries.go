@@ -23,15 +23,19 @@ type Patients struct {
 }
 
 type Cases struct {
-	InsertIfAbsent string
-	Get            string
-	GetForUpdate   string
-	GetByStudy     string
-	Update         string
+	InsertIfAbsent  string
+	Get             string
+	GetForUpdate    string
+	GetByStudy      string
+	Update          string
+	ListReviewQueue string
 }
 
 type Recommendations struct {
 	Insert             string
+	Append             string
+	Get                string
+	UpdateReview       string
 	ListByCase         string
 	ListActiveServices string
 }
@@ -65,14 +69,18 @@ func Load() (Queries, error) {
 			Get:    read("patients/get.sql"),
 		},
 		Cases: Cases{
-			InsertIfAbsent: read("cases/insert_if_absent.sql"),
-			Get:            read("cases/get.sql"),
-			GetForUpdate:   read("cases/get_for_update.sql"),
-			GetByStudy:     read("cases/get_by_study.sql"),
-			Update:         read("cases/update.sql"),
+			InsertIfAbsent:  read("cases/insert_if_absent.sql"),
+			Get:             read("cases/get.sql"),
+			GetForUpdate:    read("cases/get_for_update.sql"),
+			GetByStudy:      read("cases/get_by_study.sql"),
+			Update:          read("cases/update.sql"),
+			ListReviewQueue: read("cases/list_review_queue.sql"),
 		},
 		Recommendations: Recommendations{
 			Insert:             read("recommendations/insert.sql"),
+			Append:             read("recommendations/append.sql"),
+			Get:                read("recommendations/get.sql"),
+			UpdateReview:       read("recommendations/update_review.sql"),
 			ListByCase:         read("recommendations/list_by_case.sql"),
 			ListActiveServices: read("recommendations/list_active_services.sql"),
 		},

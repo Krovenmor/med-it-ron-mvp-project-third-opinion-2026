@@ -8,6 +8,7 @@ import (
 
 	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/b2b-service/internal/domain"
 	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/b2b-service/internal/service/cases"
+	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/b2b-service/internal/service/review"
 )
 
 type reportRequest struct {
@@ -110,38 +111,160 @@ type caseResponse struct {
 	GuidelinesVersion string                   `json:"guidelines_version,omitempty"`
 	ReceivedAt        time.Time                `json:"received_at"`
 	UpdatedAt         time.Time                `json:"updated_at"`
+	Patient           patientResponse          `json:"patient"`
 	Recommendations   []recommendationResponse `json:"recommendations"`
 }
 
+type patientResponse struct {
+	FullName  string `json:"full_name"`
+	BirthDate string `json:"birth_date"`
+	Sex       string `json:"sex"`
+}
+
 type recommendationResponse struct {
-	ID            uuid.UUID `json:"id"`
-	Position      int       `json:"position"`
-	Source        string    `json:"source"`
-	ServiceCode   string    `json:"service_code"`
-	ServiceName   string    `json:"service_name"`
-	Importance    string    `json:"importance"`
-	Rationale     string    `json:"rationale"`
-	GuidelineRef  string    `json:"guideline_ref"`
-	PatientText   string    `json:"patient_text"`
-	AlreadyBooked bool      `json:"already_booked"`
+	ID            uuid.UUID       `json:"id"`
+	Position      int             `json:"position"`
+	Source        string          `json:"source"`
+	ServiceCode   string          `json:"service_code"`
+	ServiceName   string          `json:"service_name"`
+	Importance    string          `json:"importance"`
+	Rationale     string          `json:"rationale"`
+	GuidelineRef  string          `json:"guideline_ref"`
+	PatientText   string          `json:"patient_text"`
+	AlreadyBooked bool            `json:"already_booked"`
+	Review        *reviewResponse `json:"review"`
+}
+
+type reviewResponse struct {
+	Mark          string    `json:"mark"`
+	RejectReason  string    `json:"reject_reason,omitempty"`
+	RejectComment string    `json:"reject_comment,omitempty"`
+	ReviewedBy    string    `json:"reviewed_by"`
+	ReviewedAt    time.Time `json:"reviewed_at"`
+}
+
+type reviewQueueResponse struct {
+	Cases []queueCaseResponse `json:"cases"`
+}
+
+type queueCaseResponse struct {
+	CaseID                  uuid.UUID       `json:"case_id"`
+	Urgency                 string          `json:"urgency"`
+	Modality                string          `json:"modality"`
+	PerformedAt             time.Time       `json:"performed_at"`
+	ReceivedAt              time.Time       `json:"received_at"`
+	Patient                 patientResponse `json:"patient"`
+	RecommendationsTotal    int             `json:"recommendations_total"`
+	RecommendationsReviewed int             `json:"recommendations_reviewed"`
+}
+
+type reviewRecommendationRequest struct {
+	Mark          string  `json:"mark"`
+	RejectReason  string  `json:"reject_reason"`
+	RejectComment string  `json:"reject_comment"`
+	PatientText   *string `json:"patient_text"`
+}
+
+type addRecommendationRequest struct {
+	ServiceCode string `json:"service_code"`
+	ServiceName string `json:"service_name"`
+	Rationale   string `json:"rationale"`
+	PatientText string `json:"patient_text"`
+	Mark        string `json:"mark"`
+}
+
+type changeUrgencyRequest struct {
+	Urgency string `json:"urgency"`
+	Reason  string `json:"reason"`
+}
+
+func (r reviewRecommendationRequest) toCommand(caseID, recommendationID uuid.UUID, actor string) review.ReviewRecommendation {
+	return review.ReviewRecommendation{
+		CaseID:           caseID,
+		RecommendationID: recommendationID,
+		Mark:             domain.Mark(r.Mark),
+		RejectReason:     domain.RejectReason(r.RejectReason),
+		RejectComment:    r.RejectComment,
+		PatientText:      r.PatientText,
+		Actor:            actor,
+	}
+}
+
+func (r addRecommendationRequest) toCommand(caseID uuid.UUID, actor string) review.AddRecommendation {
+	return review.AddRecommendation{
+		CaseID:      caseID,
+		Service:     domain.Service{Code: r.ServiceCode, Name: r.ServiceName},
+		Rationale:   r.Rationale,
+		PatientText: r.PatientText,
+		Mark:        domain.Mark(r.Mark),
+		Actor:       actor,
+	}
+}
+
+func (r changeUrgencyRequest) toCommand(caseID uuid.UUID, actor string) review.ChangeUrgency {
+	return review.ChangeUrgency{
+		CaseID:  caseID,
+		Urgency: domain.Urgency(r.Urgency),
+		Reason:  r.Reason,
+		Actor:   actor,
+	}
+}
+
+func newRecommendationResponse(r domain.Recommendation) recommendationResponse {
+	resp := recommendationResponse{
+		ID:            r.ID,
+		Position:      r.Position,
+		Source:        string(r.Source),
+		ServiceCode:   r.ServiceCode,
+		ServiceName:   r.ServiceName,
+		Importance:    string(r.Importance),
+		Rationale:     r.Rationale,
+		GuidelineRef:  r.GuidelineRef,
+		PatientText:   r.PatientText,
+		AlreadyBooked: r.AlreadyBooked,
+	}
+	if r.Reviewed() {
+		resp.Review = &reviewResponse{
+			Mark:          string(r.Review.Mark),
+			RejectReason:  string(r.Review.RejectReason),
+			RejectComment: r.Review.RejectComment,
+			ReviewedBy:    r.Review.ReviewedBy,
+			ReviewedAt:    r.Review.ReviewedAt,
+		}
+	}
+	return resp
+}
+
+func newPatientResponse(p domain.Patient) patientResponse {
+	return patientResponse{
+		FullName:  p.FullName,
+		BirthDate: p.BirthDate.Format(time.DateOnly),
+		Sex:       string(p.Sex),
+	}
+}
+
+func newReviewQueueResponse(items []domain.ReviewQueueItem) reviewQueueResponse {
+	resp := reviewQueueResponse{Cases: make([]queueCaseResponse, 0, len(items))}
+	for _, item := range items {
+		resp.Cases = append(resp.Cases, queueCaseResponse{
+			CaseID:                  item.CaseID,
+			Urgency:                 string(item.Urgency),
+			Modality:                string(item.Modality),
+			PerformedAt:             item.PerformedAt,
+			ReceivedAt:              item.ReceivedAt,
+			Patient:                 newPatientResponse(item.Patient),
+			RecommendationsTotal:    item.RecommendationsTotal,
+			RecommendationsReviewed: item.RecommendationsReviewed,
+		})
+	}
+	return resp
 }
 
 func newCaseResponse(d cases.Details) caseResponse {
 	c := d.Case
 	recs := make([]recommendationResponse, 0, len(d.Recommendations))
 	for _, r := range d.Recommendations {
-		recs = append(recs, recommendationResponse{
-			ID:            r.ID,
-			Position:      r.Position,
-			Source:        string(r.Source),
-			ServiceCode:   r.ServiceCode,
-			ServiceName:   r.ServiceName,
-			Importance:    string(r.Importance),
-			Rationale:     r.Rationale,
-			GuidelineRef:  r.GuidelineRef,
-			PatientText:   r.PatientText,
-			AlreadyBooked: r.AlreadyBooked,
-		})
+		recs = append(recs, newRecommendationResponse(r))
 	}
 	return caseResponse{
 		ID:                c.ID,
@@ -158,6 +281,7 @@ func newCaseResponse(d cases.Details) caseResponse {
 		GuidelinesVersion: c.GuidelinesVersion,
 		ReceivedAt:        c.ReceivedAt,
 		UpdatedAt:         c.UpdatedAt,
+		Patient:           newPatientResponse(d.Patient),
 		Recommendations:   recs,
 	}
 }
