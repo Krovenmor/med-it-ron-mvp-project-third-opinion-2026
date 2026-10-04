@@ -1,0 +1,32 @@
+[project]
+name = "ai-service"
+version = "0.1.0"
+description = "Формирование рекомендаций маршрута пациента по заключению ИИ"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.142",
+    "gigachat>=0.2.3",
+    "httpx>=0.28",
+    "pydantic>=2.13",
+    "python-dotenv>=1.2",
+    "uvicorn[standard]>=0.54",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.1",
+]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "tests"]
+
+[tool.ruff]
+line-length = 110

@@ -1,0 +1,16 @@
+{
+  "case_id": "00000000-0000-4000-8000-000000000003",
+  "study": {
+    "modality": "DX",
+    "body_site": "chest",
+    "performed_at": "2026-10-03T09:00:00Z"
+  },
+  "conclusion": "Рентгенография органов грудной клетки. Справа пневмоторакс с коллапсом лёгкого на 1/3 объёма.",
+  "patient": {
+    "age": 38,
+    "sex": "male"
+  },
+  "current_recommendations": [],
+  "visits": [],
+  "appointments": []
+}

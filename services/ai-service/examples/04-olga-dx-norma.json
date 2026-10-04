@@ -1,0 +1,22 @@
+{
+  "case_id": "00000000-0000-4000-8000-000000000004",
+  "study": {
+    "modality": "DX",
+    "body_site": "chest",
+    "performed_at": "2026-10-03T09:00:00Z"
+  },
+  "conclusion": "Рентгенография органов грудной клетки. Лёгочные поля без патологических изменений. Корни структурны, синусы свободны.",
+  "patient": {
+    "age": 44,
+    "sex": "female"
+  },
+  "current_recommendations": [],
+  "visits": [
+    {
+      "service_code": "DX-CHEST",
+      "service_name": "Рентгенография органов грудной клетки",
+      "visited_at": "2025-10-01T09:00:00Z"
+    }
+  ],
+  "appointments": []
+}
