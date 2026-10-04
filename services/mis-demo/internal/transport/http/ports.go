@@ -13,6 +13,7 @@ type Scheduler interface {
 	Slots(serviceCode string, now time.Time) []scheduling.Slot
 	Book(req scheduling.BookRequest, now time.Time) (demo.Appointment, bool, error)
 	AppointmentsOf(patientID string) []demo.Appointment
+	Reset()
 }
 
 type ReportSender interface {

@@ -79,6 +79,13 @@ func (s *Scheduler) Book(req BookRequest, now time.Time) (demo.Appointment, bool
 	return appointment, true, nil
 }
 
+func (s *Scheduler) Reset() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.seq = 0
+	s.appointments = map[string]demo.Appointment{}
+}
+
 func (s *Scheduler) AppointmentsOf(patientID string) []demo.Appointment {
 	s.mu.Lock()
 	defer s.mu.Unlock()

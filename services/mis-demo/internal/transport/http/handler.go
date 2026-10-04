@@ -21,6 +21,8 @@ func (h *Handler) Routes() http.Handler {
 	mux.HandleFunc("GET /api/v1/patients/{id}/history", h.patientHistory)
 	mux.HandleFunc("GET /api/v1/slots", h.listSlots)
 	mux.HandleFunc("POST /api/v1/appointments", h.bookAppointment)
+	mux.HandleFunc("GET /api/v1/services", h.searchServices)
 	mux.HandleFunc("POST /demo/reports", h.sendReports)
+	mux.HandleFunc("POST /demo/reset", h.resetDemo)
 	return h.logRequests(mux)
 }

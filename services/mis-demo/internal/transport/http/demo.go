@@ -23,3 +23,8 @@ func (h *Handler) sendReports(w http.ResponseWriter, r *http.Request) {
 	}
 	h.writeJSON(w, http.StatusOK, deliveriesResponse{Delivered: deliveries})
 }
+
+func (h *Handler) resetDemo(w http.ResponseWriter, _ *http.Request) {
+	h.scheduler.Reset()
+	w.WriteHeader(http.StatusNoContent)
+}
