@@ -34,5 +34,13 @@ services:
     ports:
       - "8081:8081"
 
+  b2c-service:
+    build: ./services/b2c-service
+    env_file:
+      - ./services/b2c-service/config/default.env
+      - ./services/b2c-service/config/docker.env
+    ports:
+      - "8082:8082"
+
 volumes:
   postgres-data:
