@@ -1,0 +1,37 @@
+import clsx from 'clsx'
+import type { ButtonHTMLAttributes } from 'react'
+
+type Variant = 'primary' | 'secondary' | 'ghost'
+type Size = 'md' | 'sm'
+
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: Variant
+  size?: Size
+}
+
+const variants: Record<Variant, string> = {
+  primary: 'bg-accent text-ink hover:bg-accent-dark disabled:hover:bg-accent',
+  secondary: 'border border-line bg-white text-ink hover:bg-card disabled:hover:bg-white',
+  ghost: 'text-accent-deep hover:bg-accent-tint disabled:hover:bg-transparent',
+}
+
+const sizes: Record<Size, string> = {
+  md: 'h-11 px-5 text-base',
+  sm: 'h-9 px-3 text-sm',
+}
+
+export function Button({ variant = 'primary', size = 'md', className, type = 'button', ...props }: ButtonProps) {
+  return (
+    <button
+      type={type}
+      className={clsx(
+        'inline-flex shrink-0 items-center justify-center gap-2 rounded-control font-semibold transition-colors',
+        'disabled:cursor-not-allowed disabled:opacity-50',
+        variants[variant],
+        sizes[size],
+        className,
+      )}
+      {...props}
+    />
+  )
+}

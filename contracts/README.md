@@ -15,6 +15,7 @@
 | mis-demo | 8081 | в памяти, сбрасывается при перезапуске |
 | b2c-service | 8082 | нет, собирает данные на лету |
 | ai-service | задаётся `AI_SERVICE_URL` | — |
+| frontend-service | 3000 | нет; nginx отдаёт статику и проксирует `/b2b/`, `/mis/`, `/b2c/` на сервисы |
 
 ```
             POST /api/v1/reports
