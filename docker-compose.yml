@@ -25,6 +25,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      ai-service:
+        condition: service_started
 
   mis-demo:
     build: ./services/mis-demo
@@ -41,6 +43,24 @@ services:
       - ./services/b2c-service/config/docker.env
     ports:
       - "8082:8082"
+
+  ai-service:
+    build: ./services/ai-service
+    env_file:
+      - ./services/ai-service/config/default.env
+      # Секреты (ключ GigaChat). Файла может не быть — тогда сервис стартует, но оценки будут падать.
+      - path: ./services/ai-service/.env
+        required: false
+      # Последним, чтобы адреса для docker-сети перекрывали локальные значения из .env.
+      - ./services/ai-service/config/docker.env
+    volumes:
+      - ./services/ai-service/certs:/srv/certs:ro
+    # Только localhost: авторизации нет, а каждый запрос тратит токены GigaChat.
+    # b2b-service ходит сюда по docker-сети, проброс порта ему не нужен.
+    ports:
+      - "127.0.0.1:8083:8083"
+    depends_on:
+      - mis-demo
 
   frontend-service:
     build: ./web
