@@ -9,9 +9,12 @@ type Visit struct {
 }
 
 type Appointment struct {
+	ID          string    `json:"id"`
+	PatientID   string    `json:"patient_id"`
 	ServiceCode string    `json:"service_code"`
 	ServiceName string    `json:"service_name"`
 	ScheduledAt time.Time `json:"scheduled_at"`
+	ReferralID  string    `json:"referral_id,omitempty"`
 }
 
 type History struct {

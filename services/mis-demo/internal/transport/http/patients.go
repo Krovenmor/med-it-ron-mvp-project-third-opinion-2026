@@ -7,5 +7,8 @@ import (
 )
 
 func (h *Handler) patientHistory(w http.ResponseWriter, r *http.Request) {
-	h.writeJSON(w, http.StatusOK, demo.HistoryOf(r.PathValue("id")))
+	patientID := r.PathValue("id")
+	history := demo.HistoryOf(patientID)
+	history.Appointments = append(history.Appointments, h.scheduler.AppointmentsOf(patientID)...)
+	h.writeJSON(w, http.StatusOK, history)
 }

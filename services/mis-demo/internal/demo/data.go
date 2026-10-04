@@ -73,13 +73,10 @@ var reports = []Report{
 
 func HistoryOf(patientID string) History {
 	h := histories[patientID]
-	if h.Visits == nil {
-		h.Visits = []Visit{}
+	return History{
+		Visits:       append([]Visit{}, h.Visits...),
+		Appointments: append([]Appointment{}, h.Appointments...),
 	}
-	if h.Appointments == nil {
-		h.Appointments = []Appointment{}
-	}
-	return h
 }
 
 func Reports() []Report {

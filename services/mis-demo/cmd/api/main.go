@@ -14,6 +14,7 @@ import (
 
 	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/mis-demo/internal/b2b"
 	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/mis-demo/internal/config"
+	"github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/mis-demo/internal/scheduling"
 	httptransport "github.com/Krovenmor/med-it-ron-mvp-project-third-opinion-2026/services/mis-demo/internal/transport/http"
 )
 
@@ -37,7 +38,7 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	handler := httptransport.NewHandler(b2b.NewClient(cfg.B2B.URL, cfg.B2B.Timeout), log)
+	handler := httptransport.NewHandler(b2b.NewClient(cfg.B2B.URL, cfg.B2B.Timeout), scheduling.New(cfg.Schedule.SlotsCount), log)
 	srv := &http.Server{
 		Addr:              cfg.HTTP.Addr,
 		Handler:           handler.Routes(),
