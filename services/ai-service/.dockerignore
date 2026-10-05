@@ -1,0 +1,13 @@
+Dockerfile
+.dockerignore
+.venv/
+.env
+.env.example
+config/docker.env
+tests/
+examples/
+certs/
+**/__pycache__/
+.pytest_cache/
+README.md
+.DS_Store

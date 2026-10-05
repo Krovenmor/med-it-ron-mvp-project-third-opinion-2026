@@ -1,0 +1,22 @@
+{
+  "case_id": "00000000-0000-4000-8000-000000000001",
+  "study": {
+    "modality": "MG",
+    "body_site": "breast",
+    "performed_at": "2026-10-03T09:00:00Z"
+  },
+  "conclusion": "Маммография обеих молочных желез. В верхне-наружном квадранте левой молочной железы образование неправильной формы 12 мм с нечёткими контурами. Заключение: BI-RADS 4.",
+  "patient": {
+    "age": 52,
+    "sex": "female"
+  },
+  "current_recommendations": [],
+  "visits": [
+    {
+      "service_code": "MG-SCREENING",
+      "service_name": "Маммография (скрининг)",
+      "visited_at": "2025-09-15T09:00:00Z"
+    }
+  ],
+  "appointments": []
+}

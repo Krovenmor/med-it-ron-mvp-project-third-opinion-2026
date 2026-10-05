@@ -1,0 +1,28 @@
+{
+  "case_id": "00000000-0000-4000-8000-000000000008",
+  "study": {
+    "modality": "CT",
+    "body_site": "chest",
+    "performed_at": "2026-10-03T09:00:00Z"
+  },
+  "conclusion": "КТ органов грудной клетки. В S6 правого лёгкого солидный очаг 9 мм с ровными контурами. Внутригрудные лимфоузлы не увеличены.",
+  "patient": {
+    "age": 61,
+    "sex": "male"
+  },
+  "current_recommendations": [],
+  "visits": [
+    {
+      "service_code": "THER-CONSULT",
+      "service_name": "Приём терапевта",
+      "visited_at": "2026-08-20T09:00:00Z"
+    }
+  ],
+  "appointments": [
+    {
+      "service_code": "PULM-CONSULT",
+      "service_name": "Консультация пульмонолога",
+      "scheduled_at": "2026-10-06T06:00:00Z"
+    }
+  ]
+}
