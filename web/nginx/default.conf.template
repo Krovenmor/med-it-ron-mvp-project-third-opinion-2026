@@ -1,0 +1,24 @@
+server {
+    listen 80;
+    root /usr/share/nginx/html;
+
+    location /b2b/ {
+        proxy_pass ${B2B_URL}/;
+    }
+
+    location /mis/ {
+        proxy_pass ${MIS_URL}/;
+    }
+
+    location /b2c/ {
+        proxy_pass ${B2C_URL}/;
+    }
+
+    location /assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    location / {
+        try_files $uri /index.html;
+    }
+}

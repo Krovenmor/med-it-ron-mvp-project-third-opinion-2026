@@ -1,0 +1,16 @@
+{
+  "case_id": "00000000-0000-4000-8000-000000000007",
+  "study": {
+    "modality": "MG",
+    "body_site": "breast",
+    "performed_at": "2026-10-03T09:00:00Z"
+  },
+  "conclusion": "Правая молочная железа: BI-RADS 1\nЛевая молочная железа: BI-RADS 1",
+  "patient": {
+    "age": 48,
+    "sex": "female"
+  },
+  "current_recommendations": [],
+  "visits": [],
+  "appointments": []
+}
