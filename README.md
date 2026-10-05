@@ -112,10 +112,12 @@ docker compose up -d --build
 ### Тесты
 
 ```bash
-cd services/b2b-service && go test ./internal/... && go test -tags e2e ./tests/e2e/
+# Тесты b2b-service
+cd services/b2b-service && go test ./internal/modules/boundaries_test.go && go test -tags e2e ./tests/e2e/
+# b2c
 cd services/b2c-service && go test -tags e2e ./tests/e2e/
+# ai, перед этим нужно поднять окружение и установить зависимости (зависимости прописаны в Dockerfile)
 cd services/ai-service && .venv/bin/pytest
-cd web && npm ci && npm run lint && npm run build
 ```
 
 e2e на testcontainers собирают сервис из Dockerfile, поэтому нужен запущенный Docker.
