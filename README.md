@@ -111,12 +111,16 @@ docker compose up -d --build
 
 ### Тесты
 
+- b2b-service: (нужен запущенный Docker)
 ```bash
-# Тесты b2b-service
 cd services/b2b-service && go test ./internal/modules/boundaries_test.go && go test -tags e2e ./tests/e2e/
-# b2c
+```
+- b2c-service: (нужен запущенный Docker)
+```bash
 cd services/b2c-service && go test -tags e2e ./tests/e2e/
-# ai, перед этим нужно поднять окружение и установить зависимости (зависимости прописаны в Dockerfile)
+```
+- ai-service, перед этим нужно поднять окружение и установить зависимости (зависимости прописаны в Dockerfile):
+```bash
 cd services/ai-service && .venv/bin/pytest
 ```
 
